@@ -7,7 +7,7 @@ namespace PipeWrench.Lib.Tunnels
 {
     public delegate void ThreadDeathNotification();
 
-    public delegate byte[] MessageReceivedNotification();
+    public delegate void TunnelMessageNotification(byte[] data);
 
     public class Tunnel
     {
@@ -37,11 +37,11 @@ namespace PipeWrench.Lib.Tunnels
                     
                 }
             }
-
         }
 
         private void TunnelSendThread(string remoteIp, int remotePort)
         {
+            //need to loop and check for messages from message handler and send heartbeat if not.
             Buffer.ClearBuffer(_sendBuffer);
             Buffer.FinalizeBuffer(_sendBuffer);
             SockLib.SendMessage(_socket, remoteIp, remotePort, _sendBuffer);
