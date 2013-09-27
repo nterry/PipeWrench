@@ -5,12 +5,10 @@ namespace PipeWrench.Lib.MessageHandlers
 {
     public class DefaultMessageHandler : IMessageHandler
     {
-        public event TunnelMessageNotification MessageReceivedNotification;
         public event ServiceBindingMessageNotification ServiceBindingReceiveMessage;
 
         public DefaultMessageHandler()
         {
-            MessageReceivedNotification += ReceiveFromTunnel;
             ServiceBindingReceiveMessage += ReceiveFromServiceBinding;
         }
 
@@ -30,6 +28,11 @@ namespace PipeWrench.Lib.MessageHandlers
         }
 
         public void DispatchToTunnel()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RecieveThreadDeathFromTunnel(Tunnel tunnel)
         {
             throw new NotImplementedException();
         }

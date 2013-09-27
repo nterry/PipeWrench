@@ -4,19 +4,17 @@ namespace PipeWrench.Lib.ServiceBindings
 {
     class IpServiceBinding : IServiceBinding
     {
+        public IMessageHandler MessageHandler { get; set; }
+
         public event ServiceDispatch ServiceDispatch;
 
-        public IpServiceBinding()
+        public IpServiceBinding(IMessageHandler messageHandler)
         {
-            ServiceDispatch += ServiceDispatchedEvent;
+            MessageHandler = messageHandler;
+            ServiceDispatch += MessageHandler.ReceiveFromServiceBinding;
         }
 
         public void SendMessage(byte[] dataToSend)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void ServiceDispatchedEvent(byte[] data)
         {
             throw new NotImplementedException();
         }

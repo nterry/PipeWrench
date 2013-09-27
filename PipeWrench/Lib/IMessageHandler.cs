@@ -7,7 +7,6 @@ namespace PipeWrench.Lib
 
     public interface IMessageHandler
     {
-        event TunnelMessageNotification MessageReceivedNotification;
         event ServiceBindingMessageNotification ServiceBindingReceiveMessage;
 
         void ReceiveFromTunnel(byte[] data);
@@ -17,5 +16,7 @@ namespace PipeWrench.Lib
         void DispatchToServiceBinding();
 
         void DispatchToTunnel();
+
+        void RecieveThreadDeathFromTunnel(Tunnel tunnel);
     }
 }

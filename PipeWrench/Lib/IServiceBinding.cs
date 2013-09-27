@@ -4,9 +4,9 @@
 
     interface IServiceBinding
     {
+        IMessageHandler MessageHandler { get; set; }
         event ServiceDispatch ServiceDispatch;
 
         void SendMessage(byte[] dataToSend);
-        void ServiceDispatchedEvent(byte[] data);
     }
 }
