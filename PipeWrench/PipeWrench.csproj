@@ -49,6 +49,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Lib\Domain\Message.cs" />
+    <Compile Include="Lib\Domain\SimpleMutex.cs" />
     <Compile Include="Lib\Domain\TunnelInfo.cs" />
     <Compile Include="Lib\IMessageHandler.cs" />
     <Compile Include="Lib\IServiceBinding.cs" />
