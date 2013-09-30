@@ -5,9 +5,11 @@ namespace PipeWrench.Lib
 {
     public delegate void ServiceDispatch(byte[] data);
 
+    public delegate void RecvThreadDeathNotification();
+
     public interface IMessageHandler
     {
-        event ServiceBindingMessageNotification ServiceBindingReceiveMessage;
+        event RecvThreadDeathNotification RecvThreadDeathNotification;
 
         void ReceiveFromTunnel(byte[] data);
 
@@ -18,5 +20,7 @@ namespace PipeWrench.Lib
         void DispatchToTunnel();
 
         void RecieveThreadDeathFromTunnel(Tunnel tunnel);
+
+        void MessageReceiveThread();
     }
 }

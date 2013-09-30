@@ -14,8 +14,8 @@ namespace PipeWrench.Lib.Tunnels
 
     public class Tunnel
     {
-        public event TunnelMessageNotification MessageReceivedNotification;
-        public event ThreadDeathNotification ThreadDeathNotification;
+        private event TunnelMessageNotification MessageReceivedNotification;
+        private event ThreadDeathNotification ThreadDeathNotification;
 
         public Thread RecieveThread { get; private set; }
         public Thread SendThread { get; private set; }
@@ -27,8 +27,12 @@ namespace PipeWrench.Lib.Tunnels
         private readonly Socket _socket;
         private readonly Queue<Message> _messageQueue;
         private readonly SimpleMutex _hbMutex;
+        private readonly int _id; 
+
+        private const int HeartbeatTimeout = 60000;
         
         private static readonly ILog Logger = LogManager.GetLogger(typeof(Tunnel));
+        private static int _tunnelCounter;
         
 
         public Tunnel(IMessageHandler messageHandler, string friendlyName="Cactus Fantastico", int port=14804)
@@ -41,6 +45,7 @@ namespace PipeWrench.Lib.Tunnels
             _socket = SockLib.UdpConnect(port);
             _messageQueue = new Queue<Message>();
             _hbMutex = new SimpleMutex();
+            _id = _tunnelCounter++;
         }
 
         public Tunnel Run(string remoteIp, int remotePort)
@@ -55,19 +60,24 @@ namespace PipeWrench.Lib.Tunnels
             _messageQueue.Enqueue(message);
         }
 
+        public int GetId()
+        {
+            return _id;
+        }
+
         //TODO: Dont want to BIND to a port for every tunnel to listen for responses. This needs to be extracted to another entity 
         //TODO: so all remotes communicate with one port to me and I parse the IP header to route to the appropriate tunnel or serviceBinding
         private void TunnelReceiveThread()
         {
-            while (SockLib.BytesAvailable(_socket) != 0)
-            {
-                var bytesReceived = SockLib.ReceiveMessage(_socket, _recvBuffer);
-                if (bytesReceived > 0)
-                {
-                    MessageReceivedNotification(Buffer.GetBuffer(_recvBuffer));
-                }
-            }
-            ThreadDeathNotification(this);
+//            while (SockLib.BytesAvailable(_socket) != 0)
+//            {
+//                var bytesReceived = SockLib.ReceiveMessage(_socket, _recvBuffer);
+//                if (bytesReceived > 0)
+//                {
+//                    MessageReceivedNotification(Buffer.GetBuffer(_recvBuffer));
+//                }
+//            }
+//            ThreadDeathNotification(this);
         }
 
         private void TunnelSendThread(string remoteIp, int remotePort)
@@ -100,7 +110,7 @@ namespace PipeWrench.Lib.Tunnels
             {
                 if (_hbMutex.IsHeld())
                 {
-                    Logger.Info(string.Format("Heartbeat has already been sent to {0}:{1} in the last minute. Aborting.", remoteIp, remotePort));
+                    Logger.Info(string.Format("Heartbeat has already been sent to {0}:{1} in the last {2} seconds. Aborting.", remoteIp, remotePort, HeartbeatTimeout / 1000));
                     return;
                 }
                 Logger.Info(string.Format("Locking available mutex to send heartbeat to remote client {0}:{1}", remoteIp, remotePort));
@@ -111,7 +121,7 @@ namespace PipeWrench.Lib.Tunnels
             Buffer.ClearBuffer(tmpBuffer);
             Buffer.FinalizeBuffer(tmpBuffer);
             SockLib.SendMessage(_socket, remoteIp, remotePort, tmpBuffer);
-            Thread.Sleep(60000);
+            Thread.Sleep(HeartbeatTimeout);
             _hbMutex.Release();
         }
     }
