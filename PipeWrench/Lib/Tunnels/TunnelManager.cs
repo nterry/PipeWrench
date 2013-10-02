@@ -24,5 +24,15 @@ namespace PipeWrench.Lib.Tunnels
         {
             return _tunnels.Find(x => x.GetId() == id);
         }
+
+        public static Tunnel GetTunnelByRemoteBinding(string remoteIp, int remotePort)
+        {
+            return GetTunnelByRemoteBinding(new KeyValuePair<string, int>(remoteIp, remotePort));
+        }
+
+        public static Tunnel GetTunnelByRemoteBinding(KeyValuePair<string, int> remoteBinding)
+        {
+            return _tunnels.Find(x => x.RemoteBinding.Equals(remoteBinding));
+        }
     }
 }
