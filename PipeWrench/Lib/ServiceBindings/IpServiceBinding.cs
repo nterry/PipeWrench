@@ -3,13 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
+using PipeWrench.Lib.MessageHandlers;
 using PipeWrench.Lib.Tunnels;
 using SockLibNG.Sockets;
 using Buffer = SockLibNG.Buffers.Buffer;
 
 namespace PipeWrench.Lib.ServiceBindings
 {
-    class IpServiceBinding : IServiceBinding
+    public class IpServiceBinding : IServiceBinding
     {
         public IMessageHandler MessageHandler { get; set; }
 
@@ -19,15 +20,15 @@ namespace PipeWrench.Lib.ServiceBindings
         private readonly Buffer _sendBuffer = Buffer.New();
         private readonly Buffer _recvBuffer = Buffer.New();
 
-        public IpServiceBinding(IMessageHandler messageHandler)
+        public IpServiceBinding()
         {
-            MessageHandler = messageHandler;
+            MessageHandler = DefaultMessageHandler.GetExistingOrNew();
             ServiceDispatch += MessageHandler.ReceiveFromServiceBinding;
             MessageHandler.MessageRecievedFromTunnel += MessageRecieved;
             _tunnelClientBindMap = new ConcurrentDictionary<Tunnel, Socket>();
         }
 
-        public void SendMessage(Tunnel tunnel, byte[] dataToSend)
+        public void SendMessage(KeyValuePair<string, int> remoteBinding, byte[] dataToSend)
         {
             throw new NotImplementedException();
         }

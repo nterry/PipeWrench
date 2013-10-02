@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
+using PipeWrench.Lib.Domain;
 using PipeWrench.Lib.ServiceBindings;
 using PipeWrench.Lib.Tunnels;
 using System.Net.Sockets;
@@ -12,6 +14,8 @@ namespace PipeWrench.Lib.MessageHandlers
 {
     public class DefaultMessageHandler : IMessageHandler
     {
+        private static DefaultMessageHandler _singletonMessageHandlerRef;
+
         private readonly Socket _recvSocket;
         private readonly Buffer _recvBuffer;
         private readonly Thread _recvThread;
@@ -21,11 +25,17 @@ namespace PipeWrench.Lib.MessageHandlers
         public event RecvThreadDeathNotification RecvThreadDeathNotification;
         public event MessageRecievedFromTunnel MessageRecievedFromTunnel;
 
-        public DefaultMessageHandler()
+        public static DefaultMessageHandler GetExistingOrNew()
+        {
+            return _singletonMessageHandlerRef ?? new DefaultMessageHandler();
+        }
+
+        private DefaultMessageHandler()
         {
             _recvSocket = SockLib.UdpConnect(14804);
             _recvBuffer = Buffer.New();
             _recvThread = new Thread(MessageReceiveThread).Run();
+            _singletonMessageHandlerRef = this;
         }
 
         public void ReceiveFromTunnel(byte[] data)
@@ -33,9 +43,13 @@ namespace PipeWrench.Lib.MessageHandlers
             throw new NotImplementedException();
         }
 
-        public void ReceiveFromServiceBinding(Tunnel tunnel, byte[] data)
+        public void ReceiveFromServiceBinding(IServiceBinding sender, KeyValuePair<string, int> remoteBinding, byte[] data)
         {
-            throw new NotImplementedException();
+            var tunnelToUse = TunnelManager.GetTunnelByRemoteBinding(remoteBinding);
+            if (tunnelToUse == null)
+                sender.ServiceDispatchFail(1, string.Format("An active tunnel does not exist for remote client {0}:{1}", remoteBinding.Key, remoteBinding.Value));
+            else
+                tunnelToUse.EnqueueMessage(new Message(data));
         }
 
         public void DispatchToServiceBinding()

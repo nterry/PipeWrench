@@ -1,8 +1,9 @@
-﻿using PipeWrench.Lib.Tunnels;
+﻿using System.Collections.Generic;
+using PipeWrench.Lib.Tunnels;
 
 namespace PipeWrench.Lib
 {
-    public delegate void ServiceDispatch(Tunnel tunnel, byte[] data);
+    public delegate void ServiceDispatch(IServiceBinding sender, KeyValuePair<string,int> remoteBinding, byte[] data);
     public delegate void RecvThreadDeathNotification();
 
     public interface IMessageHandler
@@ -12,7 +13,7 @@ namespace PipeWrench.Lib
 
         void ReceiveFromTunnel(byte[] data);
 
-        void ReceiveFromServiceBinding(Tunnel tunnel, byte[] data);
+        void ReceiveFromServiceBinding(IServiceBinding sender, KeyValuePair<string, int> remoteBinding, byte[] data);
 
         void DispatchToServiceBinding();
 
