@@ -52,13 +52,13 @@
     <Compile Include="Lib\Domain\Message.cs" />
     <Compile Include="Lib\Domain\SimpleMutex.cs" />
     <Compile Include="Lib\Domain\TunnelInfo.cs" />
-    <Compile Include="Lib\ExtensionMethods.cs" />
+    <Compile Include="Lib\Util\ExtensionMethods.cs" />
     <Compile Include="Lib\IMessageHandler.cs" />
     <Compile Include="Lib\IServiceBinding.cs" />
     <Compile Include="Lib\MessageHandlers\DefaultMessageHandler.cs" />
-    <Compile Include="Lib\ServiceBindings\IpServiceBinding.cs" />
     <Compile Include="Lib\ServiceBindings\LocalServiceBinding.cs" />
     <Compile Include="Lib\Tunnels\Tunnel.cs" />
+    <Compile Include="Lib\Util\PwUtils.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Lib\Tunnels\TunnelManager.cs" />

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Threading;
 using PipeWrench.Lib.Domain;
+using PipeWrench.Lib.Util;
 using SockLibNG.Sockets;
 using log4net;
 using Buffer = SockLibNG.Buffers.Buffer;
@@ -67,7 +68,11 @@ namespace PipeWrench.Lib.Tunnels
             {
                 var message = DequeueMessage();
                 if (message == null)
+                {
                     new Thread(() => SendHeartbeat(remoteIp, remotePort)).Run();
+                    continue;
+                }
+                    
                 Buffer.ClearBuffer(_sendBuffer);
                 Buffer.Add(_sendBuffer, message);
                 Buffer.FinalizeBuffer(_sendBuffer);
@@ -78,7 +83,13 @@ namespace PipeWrench.Lib.Tunnels
         private byte[] DequeueMessage()
         {
             Message message;
-            return _messageQueue.TryDequeue(out message) ? message.Data : null;
+            _messageQueue.TryDequeue(out message);
+            if (message != null)
+            {
+                Logger.Info(string.Format("TunnelId={0} TunnelName={1} Message=\"Message available to send. Preparing and sending message with id {2}\"", GetId(), FriendlyName, message.Id));
+                return message.Data;
+            }
+            return null;
         }
 
         private void SendHeartbeat(string remoteIp, int remotePort)
@@ -87,19 +98,24 @@ namespace PipeWrench.Lib.Tunnels
             {
                 if (_hbMutex.IsHeld())
                 {
-                    Logger.Info(string.Format("Heartbeat has already been sent to {0}:{1} in the last {2} seconds. Aborting.", remoteIp, remotePort, HeartbeatTimeout / 1000));
+                    //Logger.Info(string.Format("TunnelId={0} TunnelName={1} Message=\"Heartbeat has already been sent to {2}:{3} in the last {4} seconds. Aborting.\"", GetId(), FriendlyName, remoteIp, remotePort, HeartbeatTimeout / 1000));
                     return;
                 }
-                Logger.Info(string.Format("Locking available mutex to send heartbeat to remote client {0}:{1}", remoteIp, remotePort));
+                Logger.Info(string.Format("TunnelId={0} TunnelName={1} Message=\"Locking available mutex to send heartbeat to remote client {2}:{3}\"", GetId(), FriendlyName, remoteIp, remotePort));
                 _hbMutex.Hold();
-            }
+            }   
 
             var tmpBuffer = Buffer.New();
             Buffer.ClearBuffer(tmpBuffer);
             Buffer.FinalizeBuffer(tmpBuffer);
             SockLib.SendMessage(_socket, remoteIp, remotePort, tmpBuffer);
             Thread.Sleep(HeartbeatTimeout);
-            _hbMutex.Release();
+            
+            lock (_hbMutex)
+            {
+                Logger.Info(string.Format("TunnelId={0} TunnelName={1} Message=\"Releasing mutex for heartbeat\"", GetId(), FriendlyName));
+                _hbMutex.Release();
+            }
         }
     }
 }

@@ -10,25 +10,34 @@ namespace PipeWrench.Lib.ServiceBindings
     {
         public IMessageHandler MessageHandler { get; set; }
 
-        public event ServiceDispatch ServiceDispatch;
+        private event ServiceDispatch ServiceDispatch;
+        private event TunnelCreateDispatch TunnelCreateDispatch;
 
         //The following events are for clients
         public event MessageReceived MessageReceived;
         public event MessageSendFailure MessageSendFailure;
+        public event TunnelCreationFailure TunnelCreationFailure;
+        public event TunnelCreationSuccess TunnelCreationSuccess;
 
         private readonly ConcurrentBag<Tunnel> _linkedTunnels;
 
         public LocalServiceBinding()
         {
             MessageHandler = DefaultMessageHandler.GetExistingOrNew();
-            ServiceDispatch += MessageHandler.ReceiveFromServiceBinding;
-            MessageHandler.MessageRecievedFromTunnel += MessageRecieved;
+            ServiceDispatch += MessageHandler.ReceiveMessageFromServiceBinding;
+            TunnelCreateDispatch += MessageHandler.ReceiveTunnelCreationRequestFromServiceBinding;
+            MessageHandler.MessageRecieved += MessageRecieved;
             _linkedTunnels = new ConcurrentBag<Tunnel>();
         }
 
         public void SendMessage(KeyValuePair<string, int> remoteBinding, byte[] dataToSend)
         {
             ServiceDispatch(this, remoteBinding, dataToSend);
+        }
+
+        public void CreateTunnel(string friendlyName, KeyValuePair<string, int> remoteBinding)
+        {
+            TunnelCreateDispatch(this, friendlyName, remoteBinding);
         }
 
         public void MessageRecieved(KeyValuePair<string, int> remoteBinding, byte[] data)
@@ -42,6 +51,18 @@ namespace PipeWrench.Lib.ServiceBindings
         public void ServiceDispatchFail(int errorCode, string additionalInformation)
         {
             MessageSendFailure(errorCode, additionalInformation);
+        }
+
+        //TODO: Message Handler will call these directly in ReceiveTunnelCreationRequestFromServiceBinding method
+        public void TunnelCreationFail(int errorCode, string additionalInformation)
+        {
+            TunnelCreationFailure(errorCode, additionalInformation);
+        }
+
+        public void TunnelCreationSucceed(Tunnel tunnel)
+        {
+            _linkedTunnels.Add(tunnel);
+            TunnelCreationSuccess();
         }
     }
 }
